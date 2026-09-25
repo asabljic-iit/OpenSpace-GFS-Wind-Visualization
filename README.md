@@ -27,7 +27,8 @@ The notebook supports exporting streamlines to standard OpenSpace JSON formattin
       "columns": ["x", "y", "z", "grid_value"],
       "data": [
         [-4213501.0, 312040.5, 4781200.0, 12.45],
-        [-4213420.0, 312100.2, 4781280.0, 12.80]
+        [-4213420.0, 312100.2, 4781280.0, 12.80],
+        ...
       ]
     }
   },
