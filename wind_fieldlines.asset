@@ -1,0 +1,48 @@
+local earthTransforms = asset.require("scene/solarsystem/planets/earth/transforms")
+
+--local windDataDirectory = asset.resource("json")
+local windDataDirectory = asset.resource("osfls")
+
+local WindFieldlines = {
+  Identifier = "Earth-GFS-Wind-Fieldlines",
+  Parent = "Earth",
+  Renderable = {
+    Type = "RenderableFieldlinesSequence",
+    SourceFolder = windDataDirectory,
+    --InputFileType = "Json",
+    InputFileType = "Osfls",
+    ShowAtAllTimes = true,
+    LineWidth = 2.0,
+    
+    -- Quantity-based dynamic coloring
+    ColorMethod = "By Quantity",
+    ColorQuantity = 0, -- Maps to "speed" (4th column in JSON)
+    ColorTableRanges = { { -5.0, 35.0 } }, -- Range in m/s
+    ColorMinMaxRange = { 0.0, 100.0 },
+    ColorTablePaths = { asset.resource("wind-speed.txt") },
+    Color = { 0.35, 0.51, 0.875, 1.0 },
+    
+    -- Particle flow parameters
+    ParticleSpacing = 20.0,
+    ParticleSize = 15.0,
+    FlowColor = { 1.0, 1.0, 1.0, 0.25 },
+    FlowSpeed = 15.0,
+    FlowEnabled = true,
+    ReversedFlow = true
+  },
+  GUI = {
+    Path = "/Earth/Atmosphere",
+    Name = "Global Wind Streamlines",
+    Description = "3D atmospheric wind streamlines calculated from NOAA GFS data"
+  }
+}
+
+asset.onInitialize(function()
+  openspace.addSceneGraphNode(WindFieldlines)
+end)
+
+asset.onDeinitialize(function()
+  openspace.removeSceneGraphNode(WindFieldlines)
+end)
+
+asset.export(WindFieldlines)

@@ -1,0 +1,12 @@
+# Python / Jupyter artifacts
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+
+# Local GFS data & generated binary exports
+*.f0*
+*.f1*
+*.idx
+*.osfls
+*.json
+*.zip
