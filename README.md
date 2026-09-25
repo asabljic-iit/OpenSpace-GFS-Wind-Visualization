@@ -4,6 +4,8 @@
 
 A PyTorch-accelerated data pipeline that fetches global 10-meter wind vector fields ($U/V$ components) from NOAA's Global Forecast System (GFS) AWS S3 bucket, traces 3D streamlines, and exports them directly into native OpenSpace binary fieldline (`.osfls`) time-series sequences or JSON files.
 
+<img width="969" height="892" alt="image" src="https://github.com/user-attachments/assets/408a121c-2c86-4738-85dd-ebc4544af293" />
+
 ## Features
 
 - **PyTorch CUDA Acceleration:** Traces thousands of streamlines in parallel via 2D bilinear tensor sampling (`torch.nn.functional.grid_sample`).
