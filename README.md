@@ -41,7 +41,7 @@ For large datasets or animation sequences, OpenSpace loads binary `.osfls` files
 
 1. **J2000 Timestamp Conversion:** Translates ISO strings (e.g., `2026-09-25T00:00:00.000`) into total seconds relative to the J2000 epoch (`2000-01-01 12:00:00 UTC`).
 2. **Binary Header Packing:** Writes C-compatible binary struct headers (`int32`, `uint32`, `float32`, `double`) containing total line counts, vertex counts, scalar quantity counts, and null-terminated attribute variable names.
-3. **Contiguous Vertex Offsets:** Packs line start indices (int32), point counts per line (`uint32`), interleaved coordinate positions (`float32`), and scalar attribute arrays sequentially into disk storage.
+3. **Contiguous Vertex Offsets:** Packs line start indices (`int32`), point counts per line (`uint32`), interleaved coordinate positions (`float32`), and scalar attribute arrays sequentially into disk storage.
 
 ## Quick Start
 
