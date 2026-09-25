@@ -1,6 +1,7 @@
 # Python / Jupyter artifacts
 __pycache__/
 .ipynb_checkpoints/
+.venv/
 *.pyc
 
 # Local GFS data & generated binary exports
