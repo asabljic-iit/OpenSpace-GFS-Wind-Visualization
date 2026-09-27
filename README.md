@@ -59,3 +59,7 @@ For large datasets or animation sequences, OpenSpace loads binary `.osfls` files
 2. Run the **Setup** section to initialize dependencies (`torch`, `cfgrib`, `xarray`, `eccodes`).
 3. Execute the **Historical Loop** or **Forecasting Loop** cell to generate your sequence of `.osfls` binary files.
 4. Move the exported `.osfls` files and the provided `wind-speed.txt` color table into your OpenSpace asset directory alongside `wind_fieldlines.asset`.
+
+## (Optional) HTTP Server
+
+If you'd like to run a HTTP server that serves the OSFLS files dynamically to OpenSpace, run the `server.py` script by doing `python -m uvicorn server:app --reload --host 0.0.0.0 --port 8000`, and comment out the lines in `wind_fieldlines.asset`.

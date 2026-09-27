@@ -7,6 +7,8 @@ local function createWindLayer(identifier, name, guiPath, dataId, enabled)
     Parent = "Earth",
     Renderable = {
       Type = "RenderableFieldlinesSequence",
+
+      LoadingType = "StaticLoading",
       SourceFolder = asset.resource("osfls_files/" .. dataId),
       InputFileType = "Osfls",
 
