@@ -23,7 +23,7 @@ local function createWindLayer(identifier, name, guiPath, dataId, enabled)
       LineWidth = 2.0,
       ColorMethod = "By Quantity",
       ColorQuantity = 0,
-      ColorTableRanges = { { -5.0, 35.0 } },
+      ColorTableRanges = { { -5.0, 40.0 } },
       ColorMinMaxRange = { 0.0, 120.0 },
       ColorTablePaths = { asset.resource("wind-speed.txt") },
       Color = { 0.35, 0.50, 0.875, 1.0 },
