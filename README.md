@@ -1,6 +1,6 @@
 # OpenSpace NOAA GFS Wind Fieldline Visualization
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/asabljic-iit/OpenSpace-GFS-Wind-Visualization/blob/main/OpenSpaceAtmosphereWind.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/asabljic-iit/OpenSpace-GFS-Wind-Visualization/blob/main/gfs_fieldline_tracer.ipynb.ipynb)
 
 A PyTorch-accelerated data pipeline that fetches global 10-meter wind vector fields ($U/V$ components) from NOAA's Global Forecast System (GFS) AWS S3 bucket, traces 3D streamlines, and exports them directly into native OpenSpace binary fieldline (`.osfls`) time-series sequences or JSON files.
 
@@ -46,7 +46,7 @@ For large datasets or animation sequences, OpenSpace loads binary `.osfls` files
 
 ## Quick Start
 
-1. Open `OpenSpaceAtmosphereWind.ipynb` in Google Colab (with a GPU runtime) or run it locally in Jupyter Notebook.
+1. Open `gfs_fieldline_tracer.ipynb` in Google Colab (with a GPU runtime) or run it locally in Jupyter Notebook.
 2. Run the **Setup** section to initialize dependencies (`torch`, `cfgrib`, `xarray`, `eccodes`).
 3. Execute the **Historical Loop** or **Forecasting Loop** cell to generate your sequence of `.osfls` binary files.
 4. Move the exported `.osfls` files and the provided `wind-speed.txt` color table into your OpenSpace asset directory alongside `wind_fieldlines.asset`.
