@@ -1,48 +1,66 @@
 local earthTransforms = asset.require("scene/solarsystem/planets/earth/transforms")
 
---local windDataDirectory = asset.resource("json")
-local windDataDirectory = asset.resource("osfls")
+-- Helper function to generate fieldline nodes for different altitude layers
+local function createWindLayer(identifier, name, guiPath, dataId, enabled)
+  return {
+    Identifier = identifier,
+    Parent = "Earth",
+    Renderable = {
+      Type = "RenderableFieldlinesSequence",
+      SourceFolder = asset.resource("osfls_files/" .. dataId),
+      InputFileType = "Osfls",
 
-local WindFieldlines = {
-  Identifier = "Earth-GFS-Wind-Fieldlines",
-  Parent = "Earth",
-  Renderable = {
-    Type = "RenderableFieldlinesSequence",
-    SourceFolder = windDataDirectory,
-    --InputFileType = "Json",
-    InputFileType = "Osfls",
-    ShowAtAllTimes = true,
-    LineWidth = 2.0,
-    
-    -- Quantity-based dynamic coloring
-    ColorMethod = "By Quantity",
-    ColorQuantity = 0, -- Maps to "speed" (4th column in JSON)
-    ColorTableRanges = { { -5.0, 35.0 } }, -- Range in m/s
-    ColorMinMaxRange = { 0.0, 100.0 },
-    ColorTablePaths = { asset.resource("wind-speed.txt") },
-    Color = { 0.35, 0.51, 0.875, 1.0 },
-    
-    -- Particle flow parameters
-    ParticleSpacing = 20.0,
-    ParticleSize = 15.0,
-    FlowColor = { 1.0, 1.0, 1.0, 0.25 },
-    FlowSpeed = 15.0,
-    FlowEnabled = true,
-    ReversedFlow = true
-  },
-  GUI = {
-    Path = "/Earth/Atmosphere",
-    Name = "Global Wind Streamlines",
-    Description = "3D atmospheric wind streamlines calculated from NOAA GFS data"
+      -- LoadingType = "DynamicDownloading",
+      -- InputFileType = "Osfls",
+      -- DataID = dataId,
+      
+      -- InfoURL = "http://localhost:8000/api/info/",
+      -- DataURL = "http://localhost:8000/api/data?",
+      
+      -- NumberOfFilesToQueue = 72,
+      -- CacheData = true,
+      
+      LineWidth = 2.0,
+      ColorMethod = "By Quantity",
+      ColorQuantity = 0,
+      ColorTableRanges = { { -5.0, 35.0 } },
+      ColorMinMaxRange = { 0.0, 120.0 },
+      ColorTablePaths = { asset.resource("wind-speed.txt") },
+      Color = { 0.35, 0.50, 0.875, 1.0 },
+      
+      ParticleSpacing = 20.0,
+      ParticleSize = 15.0,
+      FlowColor = { 1.0, 1.0, 1.0, 0.25 },
+      FlowSpeed = 15.0,
+      FlowEnabled = true,
+      ReversedFlow = true,
+      Enabled = enabled
+    },
+    GUI = {
+      Path = guiPath,
+      Name = name,
+      Description = "Wind fieldlines from NOAA GFS at " .. name
+    }
   }
-}
+end
+
+-- Define nodes for each altitude layer
+local surfaceWind = createWindLayer("Earth-Wind-Surface-10m", "Surface (10m)", "/Earth/Atmosphere/Wind Layers", 101, true)
+local lowMidWind = createWindLayer("Earth-Wind-700hPa", "700 hPa (~3 km)", "/Earth/Atmosphere/Wind Layers", 700, false)
+local jetStream = createWindLayer("Earth-Wind-JetStream-250hPa", "250 hPa (~10.5 km)", "/Earth/Atmosphere/Wind Layers", 250, false)
 
 asset.onInitialize(function()
-  openspace.addSceneGraphNode(WindFieldlines)
+  openspace.addSceneGraphNode(surfaceWind)
+  openspace.addSceneGraphNode(lowMidWind)
+  openspace.addSceneGraphNode(jetStream)
 end)
 
 asset.onDeinitialize(function()
-  openspace.removeSceneGraphNode(WindFieldlines)
+  openspace.removeSceneGraphNode(surfaceWind)
+  openspace.removeSceneGraphNode(lowMidWind)
+  openspace.removeSceneGraphNode(jetStream)
 end)
 
-asset.export(WindFieldlines)
+asset.export(surfaceWind)
+asset.export(lowMidWind)
+asset.export(jetStream)

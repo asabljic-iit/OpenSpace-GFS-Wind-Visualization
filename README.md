@@ -10,6 +10,7 @@ A PyTorch-accelerated data pipeline that fetches global 10-meter wind vector fie
 
 - **PyTorch CUDA Acceleration:** Traces thousands of streamlines in parallel via 2D bilinear tensor sampling (`torch.nn.functional.grid_sample`).
 - **Hourly Historical & Forecast Loops:** Automatically targets published 6-hour GFS cycle runs (`00z`, `06z`, `12z`, `18z`) and resolves forecast offset steps (`f000`–`f005`) to assemble seamless hourly animation sequences.
+- **Multi-Height Extraction:** Processes vector fields from different isobaric pressure levels from NOAA GFS for layered 3D visual exploration.
 - **JSON Exporter & Parser:** Generates intermediate OpenSpace-compatible JSON fieldline structures for inspectability, testing, or custom pipeline transformations.
 - **Direct `.osfls` Binary Export:** Converts JSON structures or in-memory streamlines directly into OpenSpace `.osfls` binary files, converting ISO-8601 timestamps into J2000 epoch offsets and packing line vertices and scalar attributes into native C-struct byte streams.
 - **OpenSpace Asset Included:** Includes a ready-to-use OpenSpace `.asset` script configured with a custom transfer function for color-mapping fieldline flow speed.
