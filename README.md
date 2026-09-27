@@ -1,6 +1,6 @@
 # OpenSpace NOAA GFS Wind Fieldline Visualization
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/asabljic-iit/OpenSpace-GFS-Wind-Visualization/blob/main/gfs_fieldline_tracer.ipynb.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/asabljic-iit/OpenSpace-GFS-Wind-Visualization/blob/main/gfs_fieldline_tracer.ipynb)
 
 A PyTorch-accelerated data pipeline that fetches global 10-meter wind vector fields ($U/V$ components) from NOAA's Global Forecast System (GFS) AWS S3 bucket, traces 3D streamlines, and exports them directly into native OpenSpace binary fieldline (`.osfls`) time-series sequences or JSON files.
 
