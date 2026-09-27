@@ -45,9 +45,9 @@ local function createWindLayer(identifier, name, guiPath, dataId, enabled)
 end
 
 -- Define nodes for each altitude layer
-local surfaceWind = createWindLayer("Earth-Wind-Surface-10m", "Surface (10m)", "/Earth/Atmosphere/Wind Layers", 1001, true)
-local lowMidWind = createWindLayer("Earth-Wind-700hPa", "700 hPa (~3 km)", "/Earth/Atmosphere/Wind Layers", 700, false)
-local jetStream = createWindLayer("Earth-Wind-JetStream-250hPa", "250 hPa (~10.5 km)", "/Earth/Atmosphere/Wind Layers", 250, false)
+local surfaceWind = createWindLayer("Earth-Wind-Surface-10m", "Surface (10m)", "/Solar System/Planets/Earth/Atmosphere", 1001, true)
+local lowMidWind = createWindLayer("Earth-Wind-700hPa", "700 hPa (~3 km)", "/Solar System/Planets/Earth/Atmosphere", 700, false)
+local jetStream = createWindLayer("Earth-Wind-250hPa", "250 hPa (~10.5 km)", "/Solar System/Planets/Earth/Atmosphere", 250, false)
 
 asset.onInitialize(function()
   openspace.addSceneGraphNode(surfaceWind)
