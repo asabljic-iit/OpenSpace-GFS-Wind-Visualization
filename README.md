@@ -8,12 +8,18 @@ A PyTorch-accelerated data pipeline that fetches global 10-meter wind vector fie
 
 ## Features
 
-- **PyTorch CUDA Acceleration:** Traces thousands of streamlines in parallel via 2D bilinear tensor sampling (`torch.nn.functional.grid_sample`).
-- **Hourly Historical & Forecast Loops:** Automatically targets published 6-hour GFS cycle runs (`00z`, `06z`, `12z`, `18z`) and resolves forecast offset steps (`f000`–`f005`) to assemble seamless hourly animation sequences.
-- **Multi-Height Extraction:** Processes vector fields from different isobaric pressure levels from NOAA GFS for layered 3D visual exploration.
-- **JSON Exporter & Parser:** Generates intermediate OpenSpace-compatible JSON fieldline structures for inspectability, testing, or custom pipeline transformations.
-- **Direct `.osfls` Binary Export:** Converts JSON structures or in-memory streamlines directly into OpenSpace `.osfls` binary files, converting ISO-8601 timestamps into J2000 epoch offsets and packing line vertices and scalar attributes into native C-struct byte streams.
-- **OpenSpace Asset Included:** Includes a ready-to-use OpenSpace `.asset` script configured with a custom transfer function for color-mapping fieldline flow speed.
+- **PyTorch CUDA Acceleration**
+  > Traces thousands of streamlines in parallel via 2D bilinear tensor sampling (`torch.nn.functional.grid_sample`).
+- **Hourly Historical & Forecast Loops**
+  > Automatically targets published 6-hour GFS cycle runs (`00z`, `06z`, `12z`, `18z`) and resolves forecast offset steps (`f000`–`f005`) to assemble seamless hourly animation sequences.
+- **Multi-Height Extraction**
+  > Processes vector fields from different isobaric pressure levels from NOAA GFS for layered 3D visual exploration.
+- **JSON Exporter & Parser**
+  > Generates intermediate OpenSpace-compatible JSON fieldline structures for inspectability, testing, or custom pipeline transformations.
+- **Direct `.osfls` Binary Export**
+  > Converts JSON structures or in-memory streamlines directly into OpenSpace `.osfls` binary files, converting ISO-8601 timestamps into J2000 epoch offsets and packing line vertices and scalar attributes into native C-struct byte streams.
+- **OpenSpace Asset Included**
+  > Includes a ready-to-use OpenSpace `.asset` script configured with a custom transfer function for color-mapping fieldline flow speed.
 
 ## Data Formats & Conversion Pipeline
 
@@ -40,9 +46,12 @@ The notebook supports exporting streamlines to standard OpenSpace JSON formattin
 ### JSON to OSFLS Conversion (`convert_json_to_osfls`)
 For large datasets or animation sequences, OpenSpace loads binary `.osfls` files significantly faster than raw JSON. The `convert_json_to_osfls()` helper parses JSON fieldline files and converts them into the binary spec expected by OpenSpace:
 
-1. **J2000 Timestamp Conversion:** Translates ISO strings (e.g., `2026-09-25T00:00:00.000`) into total seconds relative to the J2000 epoch (`2000-01-01 12:00:00 UTC`).
-2. **Binary Header Packing:** Writes C-compatible binary struct headers (`int32`, `uint32`, `float32`, `double`) containing total line counts, vertex counts, scalar quantity counts, and null-terminated attribute variable names.
-3. **Contiguous Vertex Offsets:** Packs line start indices (`int32`), point counts per line (`uint32`), interleaved coordinate positions (`float32`), and scalar attribute arrays sequentially into disk storage.
+1. **J2000 Timestamp Conversion**
+   > Translates ISO strings (e.g., `2026-09-25T00:00:00.000`) into total seconds relative to the J2000 epoch (`2000-01-01 12:00:00 UTC`).
+2. **Binary Header Packing**
+   > Writes C-compatible binary struct headers (`int32`, `uint32`, `float32`, `double`) containing total line counts, vertex counts, scalar quantity counts, and null-terminated attribute variable names.
+3. **Contiguous Vertex Offsets**
+   > Packs line start indices (`int32`), point counts per line (`uint32`), interleaved coordinate positions (`float32`), and scalar attribute arrays sequentially into disk storage.
 
 ## Quick Start
 
