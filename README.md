@@ -18,7 +18,7 @@ A PyTorch-accelerated data pipeline that fetches global wind vector fields ($U/V
   > Generates intermediate OpenSpace-compatible JSON fieldline structures for inspectability, testing, or custom pipeline transformations.
 - **Direct `.osfls` Binary Export**
   > Converts JSON structures or in-memory streamlines directly into OpenSpace `.osfls` binary files, converting ISO-8601 timestamps into J2000 epoch offsets and packing line vertices and scalar attributes into native C-struct byte streams.
-- **OpenSpace Asset Included**
+- **OpenSpace Asset & Profile Included**
   > Includes a ready-to-use OpenSpace `.asset` script configured with a custom transfer function for color-mapping fieldline flow speed.
 
 ## Data Formats & Conversion Pipeline
