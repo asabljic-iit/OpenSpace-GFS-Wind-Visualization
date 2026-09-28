@@ -14,27 +14,20 @@ if DEVICE.type == "cpu":
     torch.set_num_threads(torch.get_num_threads())
 print(f"PyTorch using device: {DEVICE}")
 
-
 R_EARTH = 6371000.0  # Earth radius in meters
-ALTITUDE =  10000.0  # Altitude offset above surface in meters for fieldlines
-# Set integration step time (e.g., 1800 seconds = 30 minutes of transport per step)
+ALTITUDE = 10000.0   # Base altitude offset in meters
 DT_SECONDS = 3600.0
 NUM_STEPS = 40
 NUM_FLOWLINES = 9000
 
-
 def iso_to_j2000_seconds(iso_str):
     """Converts ISO timestamp string to J2000 seconds for OpenSpace time conversion."""
-    # Format: YYYY-MM-DDThh:mm:ss.000
     cleaned_iso = iso_str.replace("-", "").replace(":", "").replace("T", " ")
     dt = datetime.strptime(cleaned_iso[:15], "%Y%m%d %H%M%S").replace(tzinfo=timezone.utc)
-
-    # J2000 Epoch: 2000-01-01 12:00:00 UTC
     j2000_epoch = datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
     return (dt - j2000_epoch).total_seconds()
 
 def trace_wind_fieldlines(ds, alt_m=ALTITUDE, device=DEVICE):
-    # Extract U and V variables dynamically regardless of shortName
     u_var = [v for v in ds.data_vars if v.lower() in ['u10', 'u', 'u_component_of_wind']][0]
     v_var = [v for v in ds.data_vars if v.lower() in ['v10', 'v', 'v_component_of_wind']][0]
 
@@ -43,7 +36,6 @@ def trace_wind_fieldlines(ds, alt_m=ALTITUDE, device=DEVICE):
     u_data = ds[u_var].values
     v_data = ds[v_var].values
 
-    # Handle descending latitude array if needed
     if lat_grid[0] > lat_grid[-1]:
         lat_grid = lat_grid[::-1]
         u_data = np.flip(u_data, axis=0)
@@ -64,8 +56,6 @@ def trace_wind_fieldlines(ds, alt_m=ALTITUDE, device=DEVICE):
     curr_lons = torch.tensor(init_lons, dtype=torch.float32, device=device)
 
     all_steps_pts = []
-
-    # Calculate physical radius for this specific altitude layer
     r_sphere = R_EARTH + alt_m
 
     for step in range(NUM_STEPS):
@@ -120,36 +110,30 @@ def export_to_osfls(osfls_path, fieldlines, trigger_time_j2000, scalar_name="gri
         curr_index += pts_count
 
         for pt in line:
-            # pt structure: [x, y, z, speed]
             vertex_positions.extend(pt[:3])
             extra_quantities.append(pt[3])
 
     n_points = curr_index
 
-    # Convert arrays to standard C data types matching OpenSpace C++ structs
     line_start_arr = np.array(line_start, dtype=np.int32)
     line_count_arr = np.array(line_count, dtype=np.uint32)
     vertex_positions_arr = np.array(vertex_positions, dtype=np.float32)
     extra_quantities_arr = np.array(extra_quantities, dtype=np.float32)
 
     with open(osfls_path, 'wb') as ofs:
-        # Header Fields
-        ofs.write(struct.pack('i', 0))                    # CurrentVersion = 0
-        ofs.write(struct.pack('d', trigger_time_j2000))    # _triggerTime
-        ofs.write(struct.pack('i', 0))                    # _model = Invalid/Generic (0)
-        ofs.write(struct.pack('B', 0))                    # _isMorphable = 0 (false)
-        ofs.write(struct.pack('Q', n_lines))              # nLines
-        ofs.write(struct.pack('Q', n_points))             # nPoints
-        ofs.write(struct.pack('Q', 1))                    # nExtras (1 quantity: grid_value)
-        ofs.write(struct.pack('Q', byte_size_all_names))  # byteSizeAllNames
+        ofs.write(struct.pack('i', 0))
+        ofs.write(struct.pack('d', trigger_time_j2000))
+        ofs.write(struct.pack('i', 0))
+        ofs.write(struct.pack('B', 0))
+        ofs.write(struct.pack('Q', n_lines))
+        ofs.write(struct.pack('Q', n_points))
+        ofs.write(struct.pack('Q', 1))
+        ofs.write(struct.pack('Q', byte_size_all_names))
 
-        # Array Data Payload
         line_start_arr.tofile(ofs)
         line_count_arr.tofile(ofs)
         vertex_positions_arr.tofile(ofs)
         extra_quantities_arr.tofile(ofs)
-
-        # String Data Payload
         ofs.write(extra_names_bytes)
 
 LEVEL_CONFIGS = {
@@ -162,99 +146,28 @@ LEVEL_CONFIGS = {
             {'shortName': 'v', 'typeOfLevel': 'isobaricInhPa', 'level': 10}, 31000.0) # 10 hPa
 }
 
-# Determine latest GFS cycle run (accounting for ~4hr processing delay)
+# --- 1. HISTORICAL PROCESSING (72 HOURS LOOKBACK) ---
+HOURS_LOOKBACK = 72
 now_utc = datetime.now(timezone.utc)
-lagged_time = (now_utc - timedelta(hours=4)).replace(minute=0, second=0, microsecond=0)
-cycle_hour = (lagged_time.hour // 6) * 6
-
-date_folder = lagged_time.strftime("%Y%m%d")
-cycle_str = f"{cycle_hour:02d}"
-
-# Define model run base time
-base_datetime = datetime.strptime(f"{date_folder} {cycle_str}", "%Y%m%d %H").replace(tzinfo=timezone.utc)
-
-FORECAST_HOURS = range(0, 49)
-
-for f_hr in FORECAST_HOURS:
-    f_str = f"f{f_hr:03d}"
-
-    # Calculate timestamps
-    valid_datetime = base_datetime + timedelta(hours=f_hr)
-    trigger_time_j2000 = iso_to_j2000_seconds(valid_datetime.strftime("%Y-%m-%dT%H:%M:%S.000"))
-
-    # OpenSpace sequence naming format: YYYY-MM-DDThh-mm-ss-nnn.osfls
-    filename_osfls = valid_datetime.strftime("%Y-%m-%dT%H-%M-%S-000.osfls")
-
-    print(f"Processing Forecast Hour: {f_str} ({valid_datetime.strftime('%Y-%m-%dT%H:%M:%S.000')})")
-
-    # Download GRIB file
-    grib_url = f"https://noaa-gfs-bdp-pds.s3.amazonaws.com/gfs.{date_folder}/{cycle_str}/atmos/gfs.t{cycle_str}z.pgrb2.0p25.{f_str}"
-    local_grib_file = f"gfs.t{cycle_str}z.pgrb2.0p25.{f_str}"
-
-    if not os.path.exists(local_grib_file):
-        print(f"Downloading {grib_url}...")
-        urllib.request.urlretrieve(grib_url, local_grib_file)
-
-    for data_id, (filter_u, filter_v, alt_m) in LEVEL_CONFIGS.items():
-        # Save files directly into server subfolder matching data_id
-        output_dir = f"./osfls_files/{data_id}"
-        os.makedirs(output_dir, exist_ok=True)
-        
-        output_filepath = os.path.join(output_dir, filename_osfls)
-
-        # Open datasets with specific filters
-        ds_u = xr.open_dataset(local_grib_file, engine='cfgrib', filter_by_keys=filter_u)
-        ds_v = xr.open_dataset(local_grib_file, engine='cfgrib', filter_by_keys=filter_v)
-        ds = xr.merge([ds_u, ds_v], compat='override')
-
-        # Trace fieldlines using base ALTITUDE + layer offset to prevent terrain clipping
-        effective_altitude = ALTITUDE + alt_m
-        fieldlines = trace_wind_fieldlines(ds, alt_m=effective_altitude)
-        
-        # Export
-        export_to_osfls(output_filepath, fieldlines, trigger_time_j2000, scalar_name="grid_value")
-        print(f"Exported {data_id} ({alt_m}m) to {output_filepath}")
-
-        # Clean up local GRIB download to conserve disk space
-        ds.close()
-        ds_u.close()
-        ds_v.close()
-    
-    if os.path.exists(local_grib_file):
-        os.remove(local_grib_file)
-
-    for idx_file in glob.glob(f"{local_grib_file}*.idx"):
-        if os.path.exists(idx_file):
-            os.remove(idx_file)
-
-HOURS_LOOKBACK = 72  # Options: 24, 48, 168 (7 days)
-
-now_utc = datetime.now(timezone.utc)
-# Account for current run availability/upload lag (~4 hours)
 end_time = (now_utc - timedelta(hours=4)).replace(minute=0, second=0, microsecond=0)
 start_time = end_time - timedelta(hours=HOURS_LOOKBACK)
 
-print(f"Generating hourly historical OSFLS sequence from {start_time} to {end_time}\n")
+print(f"Generating historical sequence from {start_time} to {end_time}\n")
 
 current_time = start_time
-
 while current_time <= end_time:
-    # 1. Determine base 6-hour cycle run (00, 06, 12, 18)
     cycle_hour = (current_time.hour // 6) * 6
     date_folder = current_time.strftime("%Y%m%d")
     cycle_str = f"{cycle_hour:02d}"
 
-    # 2. Calculate forecast offset hour (f000, f001, ..., f005)
     f_hr = current_time.hour - cycle_hour
     f_str = f"f{f_hr:03d}"
 
-    # 3. Calculate exact valid timestamp & OpenSpace J2000 trigger time
     trigger_time_j2000 = iso_to_j2000_seconds(current_time.strftime("%Y-%m-%dT%H:%M:%S.000"))
     filename_osfls = current_time.strftime("%Y-%m-%dT%H-%M-%S-000.osfls")
 
     print(f"Target Time: {current_time.strftime('%Y-%m-%d %H:00 UTC')} | Cycle: {date_folder} t{cycle_str}z | Offset: {f_str}")
 
-    # 4. Construct S3 URL with forecast offset
     grib_url = f"https://noaa-gfs-bdp-pds.s3.amazonaws.com/gfs.{date_folder}/{cycle_str}/atmos/gfs.t{cycle_str}z.pgrb2.0p25.{f_str}"
     local_grib_file = f"gfs.t{cycle_str}z.pgrb2.0p25.{f_str}"
 
@@ -263,30 +176,27 @@ while current_time <= end_time:
             urllib.request.urlretrieve(grib_url, local_grib_file)
 
         for data_id, (filter_u, filter_v, alt_m) in LEVEL_CONFIGS.items():
-                # Save files directly into server subfolder matching data_id
-                output_dir = f"./osfls_files/{data_id}"
-                os.makedirs(output_dir, exist_ok=True)
-                
-                output_filepath = os.path.join(output_dir, filename_osfls)
-        
-                # Open datasets with specific filters
-                ds_u = xr.open_dataset(local_grib_file, engine='cfgrib', filter_by_keys=filter_u)
-                ds_v = xr.open_dataset(local_grib_file, engine='cfgrib', filter_by_keys=filter_v)
-                ds = xr.merge([ds_u, ds_v], compat='override')
-        
-                # Trace fieldlines using base ALTITUDE + layer offset to prevent terrain clipping
-                effective_altitude = ALTITUDE + alt_m
-                fieldlines = trace_wind_fieldlines(ds, alt_m=effective_altitude)
-                
-                # Export
-                export_to_osfls(output_filepath, fieldlines, trigger_time_j2000, scalar_name="grid_value")
-                print(f"Exported {data_id} ({alt_m}m) to {output_filepath}")
-        
-                # Clean up local GRIB download to conserve disk space
-                ds.close()
-                ds_u.close()
-                ds_v.close()
-                
+            output_dir = f"./osfls_files/{data_id}"
+            os.makedirs(output_dir, exist_ok=True)
+            output_filepath = os.path.join(output_dir, filename_osfls)
+
+            if os.path.exists(output_filepath):
+                continue
+
+            ds_u = xr.open_dataset(local_grib_file, engine='cfgrib', filter_by_keys=filter_u)
+            ds_v = xr.open_dataset(local_grib_file, engine='cfgrib', filter_by_keys=filter_v)
+            ds = xr.merge([ds_u, ds_v], compat='override')
+
+            effective_altitude = ALTITUDE + alt_m
+            fieldlines = trace_wind_fieldlines(ds, alt_m=effective_altitude)
+
+            export_to_osfls(output_filepath, fieldlines, trigger_time_j2000, scalar_name="grid_value")
+            print(f"Exported {data_id} ({alt_m}m) to {output_filepath}")
+
+            ds.close()
+            ds_u.close()
+            ds_v.close()
+
         if os.path.exists(local_grib_file):
             os.remove(local_grib_file)
 
@@ -295,7 +205,70 @@ while current_time <= end_time:
                 os.remove(idx_file)
 
     except Exception as e:
-        print(f"     Failed to fetch {grib_url}: {e}\n")
+        print(f"Failed to fetch {grib_url}: {e}\n")
 
-    # Advance by 1 hour
     current_time += timedelta(hours=1)
+
+# --- 2. FORECAST PROCESSING (+1 TO +48 HOURS) ---
+cycle_hour = (end_time.hour // 6) * 6
+date_folder = end_time.strftime("%Y%m%d")
+cycle_str = f"{cycle_hour:02d}"
+base_datetime = datetime.strptime(f"{date_folder} {cycle_str}", "%Y%m%d %H").replace(tzinfo=timezone.utc)
+
+# Hours between base cycle (12:00 UTC) and latest historical point (14:00 UTC)
+offset_to_end = int((end_time - base_datetime).total_seconds() // 3600)
+
+# Forecast starts at +1 hour after end_time and runs for 48 full hours
+start_f_hr = offset_to_end + 1
+end_f_hr = offset_to_end + 48
+
+FORECAST_HOURS = range(start_f_hr, end_f_hr + 1)
+
+print(f"\nGenerating forecast sequence for cycle {date_folder} t{cycle_str}z (+1h to +48h)\n")
+
+for f_hr in FORECAST_HOURS:
+    f_str = f"f{f_hr:03d}"
+    valid_datetime = base_datetime + timedelta(hours=f_hr)
+    trigger_time_j2000 = iso_to_j2000_seconds(valid_datetime.strftime("%Y-%m-%dT%H:%M:%S.000"))
+    filename_osfls = valid_datetime.strftime("%Y-%m-%dT%H-%M-%S-000.osfls")
+
+    print(f"Processing Forecast Hour: {f_str} ({valid_datetime.strftime('%Y-%m-%d %H:00 UTC')})")
+
+    grib_url = f"https://noaa-gfs-bdp-pds.s3.amazonaws.com/gfs.{date_folder}/{cycle_str}/atmos/gfs.t{cycle_str}z.pgrb2.0p25.{f_str}"
+    local_grib_file = f"gfs.t{cycle_str}z.pgrb2.0p25.{f_str}"
+
+    try:
+        if not os.path.exists(local_grib_file):
+            urllib.request.urlretrieve(grib_url, local_grib_file)
+
+        for data_id, (filter_u, filter_v, alt_m) in LEVEL_CONFIGS.items():
+            output_dir = f"./osfls_files/{data_id}"
+            os.makedirs(output_dir, exist_ok=True)
+            output_filepath = os.path.join(output_dir, filename_osfls)
+
+            if os.path.exists(output_filepath):
+                continue
+
+            ds_u = xr.open_dataset(local_grib_file, engine='cfgrib', filter_by_keys=filter_u)
+            ds_v = xr.open_dataset(local_grib_file, engine='cfgrib', filter_by_keys=filter_v)
+            ds = xr.merge([ds_u, ds_v], compat='override')
+
+            effective_altitude = ALTITUDE + alt_m
+            fieldlines = trace_wind_fieldlines(ds, alt_m=effective_altitude)
+
+            export_to_osfls(output_filepath, fieldlines, trigger_time_j2000, scalar_name="grid_value")
+            print(f"Exported {data_id} ({alt_m}m) to {output_filepath}")
+
+            ds.close()
+            ds_u.close()
+            ds_v.close()
+
+        if os.path.exists(local_grib_file):
+            os.remove(local_grib_file)
+
+        for idx_file in glob.glob(f"{local_grib_file}*.idx"):
+            if os.path.exists(idx_file):
+                os.remove(idx_file)
+
+    except Exception as e:
+        print(f"Failed to fetch forecast {grib_url}: {e}\n")

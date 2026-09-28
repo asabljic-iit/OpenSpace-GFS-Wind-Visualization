@@ -2,7 +2,7 @@ name: 5 Day Rolling Release Pipeline
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '3 4 * * *'
   workflow_dispatch: # Allows manually triggering the run from the GitHub Actions UI
 
 jobs:
