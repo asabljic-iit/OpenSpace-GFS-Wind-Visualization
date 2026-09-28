@@ -23,7 +23,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y libeccodes-dev zip unzip curl
           pip install cfgrib eccodes xarray numpy torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-      - name: Run Pipeline (Past 3 Days + Future 1 Day)
+      - name: Run Pipeline (Past 3 Days + Future 2 Days)
         run: |
           python run_5day_rolling_release.py
 
