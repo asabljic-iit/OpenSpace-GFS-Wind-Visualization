@@ -1,4 +1,4 @@
-name: Daily Rolling Release Pipeline
+name: 5 Day Rolling Release Pipeline
 
 on:
   schedule:
