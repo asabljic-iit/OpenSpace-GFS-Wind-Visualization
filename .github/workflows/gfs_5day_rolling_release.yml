@@ -20,16 +20,11 @@ jobs:
 
       - name: Install System & Python Dependencies
         run: |
-          sudo apt-get update && sudo apt-get install -y \
-            libeccodes-dev \
-            python3-eccodes \
-            python3-cfgrib \
-            python3-xarray \
-            python3-numpy \
-            zip
+          sudo apt-get update && sudo apt-get install -y libeccodes-dev zip
           pip install --upgrade pip setuptools wheel
+          pip install numpy xarray eccodes cfgrib
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-
+      
       - name: Run Pipeline (Past 3 Days + Future 2 Days)
         run: |
           python run_5day_rolling_release.py
