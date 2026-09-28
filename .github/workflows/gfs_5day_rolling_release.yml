@@ -34,12 +34,10 @@ jobs:
 
       - name: Zip Each Layer Separately
         run: |
-          cd osfls_files
-          zip -r ../layer_1001.zip 1001/
-          zip -r ../layer_700.zip 700/
-          zip -r ../layer_250.zip 250/
-          zip -r ../layer_10.zip 10/
-          cd ..
+          cd osfls_files/1001 && zip -r ../../layer_1001.zip . && cd ../..
+          cd osfls_files/700 && zip -r ../../layer_700.zip . && cd ../..
+          cd osfls_files/250 && zip -r ../../layer_250.zip . && cd ../..
+          cd osfls_files/10 && zip -r ../../layer_10.zip . && cd ../..
 
       - name: Overwrite 'latest' GitHub Release
         uses: softprops/action-gh-release@v2
