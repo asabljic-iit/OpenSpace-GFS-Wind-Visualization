@@ -4,7 +4,6 @@ import glob
 import urllib.request
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 from datetime import datetime, timezone, timedelta
 import torch
 import torch.nn.functional as F
@@ -234,4 +233,4 @@ while current_time <= end_time:
         print(f"     Failed to fetch {grib_url}: {e}\n")
 
     # Advance by 1 hour
-    current_time += timedelta(hours=STEP_INTERVAL_HOURS)
+    current_time += timedelta(hours=1)
