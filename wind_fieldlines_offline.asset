@@ -1,0 +1,68 @@
+local earthTransforms = asset.require("scene/solarsystem/planets/earth/transforms")
+
+-- Helper function to generate fieldline nodes for different altitude layers
+local function createWindLayer(identifier, name, guiPath, dataId, enabled)
+  return {
+    Identifier = identifier,
+    Parent = "Earth",
+    Renderable = {
+      Type = "RenderableFieldlinesSequence",
+
+      LoadingType = "StaticLoading",
+      SourceFolder = asset.resource("osfls_files/" .. dataId),
+      InputFileType = "Osfls",
+
+      -- LoadingType = "DynamicDownloading",
+      -- InputFileType = "Osfls",
+      -- DataID = dataId,
+      
+      -- InfoURL = "http://localhost:8000/api/info/",
+      -- DataURL = "http://localhost:8000/api/data?",
+      
+      -- NumberOfFilesToQueue = 72,
+      -- CacheData = true,
+      
+      LineWidth = 2.0,
+      ColorMethod = "By Quantity",
+      ColorQuantity = 0,
+      ColorTableRanges = { { -5.0, 40.0 } },
+      ColorMinMaxRange = { 0.0, 120.0 },
+      ColorTablePaths = { asset.resource("wind-speed.txt") },
+      Color = { 0.35, 0.50, 0.875, 1.0 },
+      
+      ParticleSpacing = 20.0,
+      ParticleSize = 15.0,
+      FlowColor = { 1.0, 1.0, 1.0, 0.25 },
+      FlowSpeed = 15.0,
+      FlowEnabled = true,
+      ReversedFlow = true,
+      Enabled = enabled
+    },
+    GUI = {
+      Path = guiPath,
+      Name = name,
+      Description = "Wind fieldlines from NOAA GFS at " .. name
+    }
+  }
+end
+
+-- Define nodes for each altitude layer
+local surfaceWind = createWindLayer("Earth-Wind-Surface-10m", "Surface (10m)", "/Solar System/Planets/Earth/Atmosphere", 1001, true)
+local lowMidWind = createWindLayer("Earth-Wind-700hPa", "700 hPa (~3 km)", "/Solar System/Planets/Earth/Atmosphere", 700, false)
+local jetStream = createWindLayer("Earth-Wind-250hPa", "250 hPa (~10.5 km)", "/Solar System/Planets/Earth/Atmosphere", 250, false)
+
+asset.onInitialize(function()
+  openspace.addSceneGraphNode(surfaceWind)
+  openspace.addSceneGraphNode(lowMidWind)
+  openspace.addSceneGraphNode(jetStream)
+end)
+
+asset.onDeinitialize(function()
+  openspace.removeSceneGraphNode(surfaceWind)
+  openspace.removeSceneGraphNode(lowMidWind)
+  openspace.removeSceneGraphNode(jetStream)
+end)
+
+asset.export(surfaceWind)
+asset.export(lowMidWind)
+asset.export(jetStream)

@@ -2,26 +2,29 @@ local earthTransforms = asset.require("scene/solarsystem/planets/earth/transform
 
 -- Helper function to generate fieldline nodes for different altitude layers
 local function createWindLayer(identifier, name, guiPath, dataId, enabled)
-  return {
+  -- Synchronize the ZIP file via UrlSynchronization
+  local syncedResource = asset.resource({
+    Type = "UrlSynchronization",
+    Name = "GFS-" .. dataId,
+    Identifier = "gfs-" .. dataId,
+    Url = "https://github.com/asabljic-iit/OpenSpace-GFS-Wind-Visualization/releases/download/latest/layer_"..dataId..".zip",
+    SecondsUntilResync = 86400 -- Check once daily
+  })
+
+  -- Construct paths for unzip operations
+  local zipFilePath = syncedResource .. "/layer_" .. dataId .. ".zip"
+  local extractDir = syncedResource .. "/" .. dataId
+
+  -- Define the Scene Graph Node pointing to the extracted directory
+  local node = {
     Identifier = identifier,
     Parent = "Earth",
     Renderable = {
       Type = "RenderableFieldlinesSequence",
-
       LoadingType = "StaticLoading",
-      SourceFolder = asset.resource("osfls_files/" .. dataId),
+      SourceFolder = extractDir,
       InputFileType = "Osfls",
 
-      -- LoadingType = "DynamicDownloading",
-      -- InputFileType = "Osfls",
-      -- DataID = dataId,
-      
-      -- InfoURL = "http://localhost:8000/api/info/",
-      -- DataURL = "http://localhost:8000/api/data?",
-      
-      -- NumberOfFilesToQueue = 72,
-      -- CacheData = true,
-      
       LineWidth = 2.0,
       ColorMethod = "By Quantity",
       ColorQuantity = 0,
@@ -44,25 +47,43 @@ local function createWindLayer(identifier, name, guiPath, dataId, enabled)
       Description = "Wind fieldlines from NOAA GFS at " .. name
     }
   }
+
+  return {
+    node = node,
+    zipFile = zipFilePath,
+    extractDestination = syncedResource,
+    layerDir = extractDir
+  }
 end
 
 -- Define nodes for each altitude layer
-local surfaceWind = createWindLayer("Earth-Wind-Surface-10m", "Surface (10m)", "/Solar System/Planets/Earth/Atmosphere", 1001, true)
-local lowMidWind = createWindLayer("Earth-Wind-700hPa", "700 hPa (~3 km)", "/Solar System/Planets/Earth/Atmosphere", 700, false)
-local jetStream = createWindLayer("Earth-Wind-250hPa", "250 hPa (~10.5 km)", "/Solar System/Planets/Earth/Atmosphere", 250, false)
+local layers = {
+  createWindLayer("Earth-Wind-Surface-10m", "Surface (10m)", "/Solar System/Planets/Earth/Atmosphere", 1001, true),
+  createWindLayer("Earth-Wind-700hPa", "700 hPa (~3 km)", "/Solar System/Planets/Earth/Atmosphere", 700, false),
+  createWindLayer("Earth-Wind-250hPa", "250 hPa (~10.5 km)", "/Solar System/Planets/Earth/Atmosphere", 250, false),
+  createWindLayer("Earth-Wind-10hPa", "10 hPa (~31 km)", "/Solar System/Planets/Earth/Atmosphere", 10, false)
+}
 
 asset.onInitialize(function()
-  openspace.addSceneGraphNode(surfaceWind)
-  openspace.addSceneGraphNode(lowMidWind)
-  openspace.addSceneGraphNode(jetStream)
+  for _, layer in ipairs(layers) do
+    -- Unzip and delete original archive first
+    if openspace.fileExists(layer.zipFile) then
+      openspace.unzipFile(layer.zipFile, layer.extractDestination, true)
+    end
+
+    -- Only add node to scene graph once the directory contains raw .osfls files
+    if openspace.directoryExists(layer.layerDir) then
+      openspace.addSceneGraphNode(layer.node)
+    end
+  end
 end)
 
 asset.onDeinitialize(function()
-  openspace.removeSceneGraphNode(surfaceWind)
-  openspace.removeSceneGraphNode(lowMidWind)
-  openspace.removeSceneGraphNode(jetStream)
+  for _, layer in ipairs(layers) do
+    openspace.removeSceneGraphNode(layer.node)
+  end
 end)
 
-asset.export(surfaceWind)
-asset.export(lowMidWind)
-asset.export(jetStream)
+for _, layer in ipairs(layers) do
+  asset.export(layer.node)
+end
