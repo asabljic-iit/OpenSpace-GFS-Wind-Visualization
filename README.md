@@ -64,4 +64,4 @@ This repository publishes a 5-day rolling release of GFS `.osfls` data that is p
 
 ## (Optional) HTTP Server
 
-If you'd like to run a HTTP server that serves the OSFLS files dynamically to OpenSpace, run the `server.py` script by doing `python -m uvicorn server:app --reload --host 0.0.0.0 --port 8000`, and comment out the lines in `wind_fieldlines_offline.asset`.
+If you'd like to run a HTTP server that serves OSFLS files dynamically to OpenSpace, run the `server.py` script by doing `python -m uvicorn server:app --reload --host 0.0.0.0 --port 8000`, and comment out the lines in `wind_fieldlines_offline.asset`.
