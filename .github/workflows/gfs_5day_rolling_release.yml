@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Dependencies
+      - name: Install System & Python Dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y \
             libeccodes-dev \
@@ -26,7 +26,7 @@ jobs:
             python3-cfgrib \
             zip
           pip install --upgrade pip setuptools wheel
-          pip install eccodes cfgrib xarray numpy torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install xarray numpy torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
       - name: Run Pipeline (Past 3 Days + Future 2 Days)
         run: |
