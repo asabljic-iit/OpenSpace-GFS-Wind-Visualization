@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Allows manually triggering the run from the GitHub Actions UI
 
 jobs:
-  update-monthly-release:
+  update-rolling-release:
     runs-on: ubuntu-latest
 
     steps:
