@@ -24,9 +24,11 @@ jobs:
             libeccodes-dev \
             python3-eccodes \
             python3-cfgrib \
+            python3-xarray \
+            python3-numpy \
             zip
           pip install --upgrade pip setuptools wheel
-          pip install xarray numpy torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
       - name: Run Pipeline (Past 3 Days + Future 2 Days)
         run: |
