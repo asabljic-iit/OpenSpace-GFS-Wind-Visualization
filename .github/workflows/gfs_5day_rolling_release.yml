@@ -3,7 +3,7 @@ name: 5 Day Rolling Release Pipeline
 on:
   schedule:
     - cron: '3 4 * * *'
-  workflow_dispatch: # Allows manually triggering the run from the GitHub Actions UI
+  workflow_dispatch:
 
 jobs:
   update-rolling-release:
@@ -41,15 +41,21 @@ jobs:
           zip -r ../layer_10.zip 10/
           cd ..
 
+      - name: Generate Release Body Notes
+        run: |
+          CURRENT_TIME=$(date -u +"%Y-%m-%d %H:%M UTC")
+          cat <<EOF > release_notes.txt
+          Automated daily release containing a rolling 5-day atmospheric sequence.
+          * **Window:** Past 3 Days (-72h) to Future 2 Days (+48h) at 1-hour resolution
+          * **Updated:** ${CURRENT_TIME}
+          EOF
+
       - name: Overwrite 'latest' GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "latest"
           name: "NOAA GFS Wind Data (Latest Rolling Sequence)"
-          body: |
-            Automated daily release containing a rolling 5-day atmospheric sequence.
-            * **Window:** Past 3 Days (-72h) to Future 2 Days (+48h) at 1-hour resolution
-            * **Updated:** ${{ github.event.repository.updated_at }}
+          body_path: release_notes.txt
           files: |
             layer_1001.zip
             layer_700.zip
