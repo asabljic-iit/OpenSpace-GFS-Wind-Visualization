@@ -149,7 +149,7 @@ LEVEL_CONFIGS = {
 # --- 1. HISTORICAL PROCESSING (72 HOURS LOOKBACK) ---
 HOURS_LOOKBACK = 72
 now_utc = datetime.now(timezone.utc)
-end_time = (now_utc - timedelta(hours=4)).replace(minute=0, second=0, microsecond=0)
+end_time = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
 start_time = end_time - timedelta(hours=HOURS_LOOKBACK)
 
 print(f"Generating historical sequence from {start_time} to {end_time}\n")
