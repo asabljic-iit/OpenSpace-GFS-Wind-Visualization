@@ -43,6 +43,8 @@ jobs:
 
       - name: Generate Release Body Notes
         run: |
+          DATE_PREFIX=$(date -u +"%m-%d")
+          echo "RELEASE_TITLE=${DATE_PREFIX} NOAA GFS Wind Data (Rolling Sequence)" >> $GITHUB_ENV
           CURRENT_TIME=$(date -u +"%Y-%m-%d %H:%M UTC")
           cat <<EOF > release_notes.txt
           Automated daily release containing a rolling 5-day atmospheric sequence.
@@ -54,7 +56,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "latest"
-          name: "NOAA GFS Wind Data (Latest Rolling Sequence)"
+          name: "${{ env.RELEASE_TITLE }}"
           body_path: release_notes.txt
           files: |
             layer_1001.zip
